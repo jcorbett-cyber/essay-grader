@@ -35,7 +35,7 @@ if st.button("Analyze Essay"):
             essay_text = extract_text_from_pdf(uploaded_file)
             
             # Step B: AI Assessment
-            model = genai.GenerativeModel('gemini-1.5-pro')
+            model = genai.GenerativeModel('gemini-pro')
             
             # This prompt is "Expert Level" for CA Standards
             prompt = f"""
