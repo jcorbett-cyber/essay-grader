@@ -47,10 +47,13 @@ if st.button("Analyze Essay"):
             2. STRENGTHS: What did the student do well?
             3. NEXT STEPS: Two specific ways to improve based on CCSS.
             
-            Essay Content: {essay_text}
-            """
+            # Step B: AI Assessment
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+            # THE MISSING LINE: This actually asks the AI the question
+            response = model.generate_content(prompt)
+            
+            # Now 'response' exists, so we can get the text
             result_text = response.text
             
             # Step C: Show Results
