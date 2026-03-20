@@ -2,17 +2,19 @@ import streamlit as st
 from supabase import create_client
 import google.generativeai as genai
 from pypdf import PdfReader
+import os
 
 # 1. Setup Connections
-# These pull from your .streamlit/secrets.toml file
+# FORCING THE STABLE VERSION TO FIX THE 404
+os.environ["GOOGLE_API_USE_MTLS_ENDPOINT"] = "never" 
+
+# Initialize the library with the stable v1 configuration
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport='rest')
+
 supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 st.set_page_config(page_title="CA Essay Grader", page_icon="🍎")
 st.title("🍎 CA Standard Essay Grader")
-
-# 2. PDF Extraction Helper Function
-def extract_text_from_pdf(file):
     pdf_reader = PdfReader(file)
     text = ""
     for page in pdf_reader.pages:
@@ -51,17 +53,17 @@ if st.button("Analyze Essay"):
                 {essay_text}
                 """
                 
-                # Step C: Ask the AI (Forcing v1 instead of v1beta)
-                import google.ai.generativelanguage_v1 as gl
+                # Step C: Ask the AI (Using the full path to bypass 404)
+                # We use 'models/' at the start to be crystal clear
+                model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
                 
-                # This line tells the "Brain" to use the stable version
-                model = genai.GenerativeModel(
-                    model_name='gemini-1.5-flash',
-                    generation_config={"candidate_count": 1}
-                )
-                
-                response = model.generate_content(prompt)
-                result_text = response.text
+                # We use a 'try/except' here just for the AI part to see if it's a key issue
+                try:
+                    response = model.generate_content(prompt)
+                    result_text = response.text
+                except Exception as ai_err:
+                    st.error(f"Google AI Error: {ai_err}")
+                    st.stop()
                 
                 # Step D: Show Results on Screen
                 st.markdown("---")
