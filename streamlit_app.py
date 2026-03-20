@@ -51,11 +51,18 @@ if st.button("Analyze Essay"):
                 {essay_text}
                 """
                 
-                # Step C: Ask the AI 
-                # Using the full 'models/' path to bypass the v1beta 404 error
-                model = genai.GenerativeModel('models/gemini-1.5-flash')
-                response = model.generate_content(prompt)
-                result_text = response.text
+                # Step C: The "Direct Path" (No 404s allowed)
+import google.ai.generativelanguage as gag
+client = gag.GenerativeServiceClient(client_options={"api_key": st.secrets["GEMINI_API_KEY"]})
+model_name = "models/gemini-1.5-flash"
+
+response = client.generate_content(
+    request={
+        "model": model_name,
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+)
+result_text = response.candidates[0].content.parts[0].text
                 
                 # Step D: Show Results
                 st.markdown("---")
