@@ -2,13 +2,18 @@ import streamlit as st
 from supabase import create_client
 import google.generativeai as genai
 from pypdf import PdfReader
-import os
 
 # 1. Setup Connections
-# FORCING THE STABLE VERSION TO FIX THE 404
-os.environ["GOOGLE_API_USE_MTLS_ENDPOINT"] = "never" 
+# This forces the library to use the STABLE v1 version, bypassing the 404 error
+genai.configure(
+    api_key=st.secrets["GEMINI_API_KEY"],
+    transport='rest',
+    client_options={'api_version': 'v1'} # <--- THIS IS THE MAGIC LINE
+)
 
-# 2. PDF Extraction Helper Function (The instructions for the computer)
+supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+
+# 2. PDF Extraction Helper Function
 def extract_text_from_pdf(file):
     pdf_reader = PdfReader(file)
     text = ""
