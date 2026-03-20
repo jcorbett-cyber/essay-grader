@@ -8,20 +8,15 @@ import os
 # FORCING THE STABLE VERSION TO FIX THE 404
 os.environ["GOOGLE_API_USE_MTLS_ENDPOINT"] = "never" 
 
-# Initialize the library with the stable v1 configuration
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport='rest')
-
-supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-
-st.set_page_config(page_title="CA Essay Grader", page_icon="🍎")
-st.title("🍎 CA Standard Essay Grader")
+# 2. PDF Extraction Helper Function (The instructions for the computer)
+def extract_text_from_pdf(file):
     pdf_reader = PdfReader(file)
     text = ""
     for page in pdf_reader.pages:
         text += page.extract_text()
     return text
 
-# 3. Sidebar for Settings
+# 3. Sidebar for Settings (This starts back at the left wall)
 with st.sidebar:
     st.header("Grading Settings")
     grade = st.selectbox("Grade Level", ["6th Grade", "7th Grade", "8th Grade", "High School"])
