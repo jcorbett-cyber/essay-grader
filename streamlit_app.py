@@ -50,7 +50,7 @@ if st.button("Analyze Essay"):
             Essay Content: {essay_text}
             """
             
-            response = model.generate_content(prompt)
+            model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
             result_text = response.text
             
             # Step C: Show Results
