@@ -4,14 +4,12 @@ import google.generativeai as genai
 from pypdf import PdfReader
 
 # 1. Setup Connections
-# This forces the library to use the STABLE v1 version, bypassing the 404 error
-genai.configure(
-    api_key=st.secrets["GEMINI_API_KEY"],
-    transport='rest',
-    client_options={'api_version': 'v1'} # <--- THIS IS THE MAGIC LINE
-)
-
+# This configuration is the most stable for 2026
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+
+st.set_page_config(page_title="CA Essay Grader", page_icon="🍎")
+st.title("🍎 CA Standard Essay Grader")
 
 # 2. PDF Extraction Helper Function
 def extract_text_from_pdf(file):
@@ -21,7 +19,7 @@ def extract_text_from_pdf(file):
         text += page.extract_text()
     return text
 
-# 3. Sidebar for Settings (This starts back at the left wall)
+# 3. Sidebar for Settings
 with st.sidebar:
     st.header("Grading Settings")
     grade = st.selectbox("Grade Level", ["6th Grade", "7th Grade", "8th Grade", "High School"])
@@ -39,47 +37,42 @@ if st.button("Analyze Essay"):
                 # Step A: Convert PDF to text
                 essay_text = extract_text_from_pdf(uploaded_file)
                 
-                # Step B: Create the Prompt (The "Instructions" for the AI)
+                # Step B: Create the Prompt
                 prompt = f"""
                 You are a California State Certified English Teacher. 
                 Grade this {grade} {standard} essay based on CCSS standards.
                 
-                Provide the assessment in this format:
-                1. SCORES (1-4) for: Organization, Evidence/Analysis, and Conventions.
+                Format:
+                1. SCORES (1-4): Organization, Evidence, Conventions.
                 2. STRENGTHS: What did the student do well?
-                3. NEXT STEPS: Two specific ways to improve based on CCSS.
+                3. NEXT STEPS: Two specific ways to improve.
                 
                 Essay Content: 
                 {essay_text}
                 """
                 
-                # Step C: Ask the AI (Using the full path to bypass 404)
-                # We use 'models/' at the start to be crystal clear
-                model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
+                # Step C: Ask the AI 
+                # Using the full 'models/' path to bypass the v1beta 404 error
+                model = genai.GenerativeModel('models/gemini-1.5-flash')
+                response = model.generate_content(prompt)
+                result_text = response.text
                 
-                # We use a 'try/except' here just for the AI part to see if it's a key issue
-                try:
-                    response = model.generate_content(prompt)
-                    result_text = response.text
-                except Exception as ai_err:
-                    st.error(f"Google AI Error: {ai_err}")
-                    st.stop()
-                
-                # Step D: Show Results on Screen
+                # Step D: Show Results
                 st.markdown("---")
                 st.markdown(f"### Assessment for {name}")
                 st.write(result_text)
                 
-                # Step E: Save to Supabase Database
+                # Step E: Save to Database
                 supabase.table("assessments").insert({
                     "student_name": name,
                     "grade_level": f"{grade} - {standard}",
                     "ai_assessment": result_text
                 }).execute()
                 
-                st.success("Successfully saved to your Teacher Dashboard!")
+                st.success("Saved to Teacher Dashboard!")
 
             except Exception as e:
-                st.error(f"An error occurred: {e}")
+                # This helps us see EXACTLY what is still failing
+                st.error(f"AI Error: {e}")
     else:
         st.warning("Please enter a name and upload a PDF.")
