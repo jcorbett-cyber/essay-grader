@@ -51,8 +51,15 @@ if st.button("Analyze Essay"):
                 {essay_text}
                 """
                 
-                # Step C: Ask the AI (The "Brain" part)
-                model = genai.GenerativeModel('gemini-pro')
+                # Step C: Ask the AI (Forcing v1 instead of v1beta)
+                import google.ai.generativelanguage_v1 as gl
+                
+                # This line tells the "Brain" to use the stable version
+                model = genai.GenerativeModel(
+                    model_name='gemini-1.5-flash',
+                    generation_config={"candidate_count": 1}
+                )
+                
                 response = model.generate_content(prompt)
                 result_text = response.text
                 
