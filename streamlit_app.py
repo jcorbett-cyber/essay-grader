@@ -52,7 +52,7 @@ if st.button("Analyze Essay"):
                 """
                 
                 # Step C: Ask the AI (The "Brain" part)
-                model = genai.GenerativeModel('gemini-1.5-flash-latest')
+                model = genai.GenerativeModel('gemini-pro')
                 response = model.generate_content(prompt)
                 result_text = response.text
                 
